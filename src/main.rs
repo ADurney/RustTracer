@@ -1,91 +1,10 @@
-#[derive(Copy,Clone,Debug)]
-pub struct Vec3
-{
-    e : [f32; 3],
-}
+mod vec3;
+mod ray;
 
+use crate::vec3::Vec3;
+use crate::vec3::Point3;
+use crate::ray::Ray;
 
-impl Vec3
-{
-    pub fn new (e0: f32, e1: f32, e2: f32) -> Vec3
-    {
-        Vec3
-        {
-            e:[e0,e1,e2]
-        }
-    }
-    pub fn x(&self) -> f32
-    {
-        self.e[0]
-    }
-    pub fn y(&self) -> f32
-    {
-        self.e[1]
-    }
-    pub fn z(&self) -> f32
-    {
-        self.e[2]
-    }
-    pub fn r(&self) -> f32
-    {
-        self.e[0]
-    }
-    pub fn g(&self) -> f32
-    {
-        self.e[1]
-    }
-    pub fn b(&self) -> f32
-    {
-        self.e[2]
-    }
-    pub fn length(&self) -> f32
-    {
-        f32::sqrt(self.e[0] * self.e[0] +
-                  self.e[1] * self.e[1] +
-                  self.e[2] * self.e[2])
-    }
-    pub fn squared_length(&self) -> f32
-    {
-        self.e[0] * self.e[0] +
-            self.e[1] * self.e[1] +
-            self.e[2] * self.e[2]
-    }
-    pub fn make_unit_vector(v: Vec3) -> Vec3
-    {
-        v / v.length()
-    }
-    pub fn dot( v1 : &Vec3, v2 : &Vec3) -> f32
-    {
-        v1.e[0] * v2.e[0] + v1.e[1] * v2.e[1] + v1.e[2] * v2.e[2]
-    }
-    pub fn cross( v1 : &Vec3, v2 : &Vec3) -> Vec3
-    {
-        Vec3::new(v1.e[1] * v2.e[2] - v1.e[2] * v2.e[1],
-                  -(v1.e[0] * v2.e[2] - v1.e[2]*v2.e[0]),
-                  v1.e[0] * v2.e[1] - v1.e[1] * v2.e[0])
-    }
-
-}
-
-impl std::ops::MulAssign<Vec3> for Vec3
-{
-    fn mul_assign(&mut self, other:Vec3)
-    {
-        self.e[0] *= other.e[0];
-        self.e[1] *= other.e[1];
-        self.e[2] *= other.e[2];
-    }
-}
-
-impl std::ops::MulAssign<f32> for Vec3
-{
-    fn mul_assign(&mut self, other: f32)
-    {
-        self.e[0] *= other;
-        self.e[1] *= other;
-        self.e[2] *= other;
-    }
-}
 
 
 pub struct Sphere
@@ -104,23 +23,54 @@ impl Sphere
 }
 
 
+type Colour = Vec3;
+
+fn write_colour(pixel_colour: Colour)
+{
+    let ir = (255.00*pixel_colour.x) as i32;
+    let ig = (255.00*pixel_colour.y) as i32;
+    let ib = (255.00*pixel_colour.z) as i32;
+    print!("{} {} {}\n", ir, ig, ib);
+}
+
+fn ray_colour(ray: Ray) -> Colour
+{
+    let unit_direction = Vec3::make_unit_vector(ray.direction()) as Vec3;
+    let t = 0.5 * (unit_direction.y + 1.0) as f32;
+    (1.0-t)*Colour::new(1.0,1.0,1.0) + t * Colour::new(0.5,0.7,1.0)
+}
+
+
 fn main() 
 {
-    let nx = 200;
-    let ny = 100;
+    //Image
+    let aspect_ratio = 16.0/9.0 as f32;
+    let image_width = 400;
+    let image_height_f =(image_width as f32)/aspect_ratio;
+    let image_height =  image_height_f.trunc() as i32;
 
-    print!("P3\n{} {}\n255\n", nx, ny);
-    for j in (0..ny).rev()
+    //Camera
+    let viewport_height = 2.0;
+    let viewport_width = aspect_ratio * viewport_height;
+    let focal_length = 1.0;
+
+    let origin = Point3::new(0.0,0.0,0.0);
+    let horizontal = Vec3::new(viewport_width,0.0,0.0);
+    let vertical = Vec3::new(0.0,viewport_height,0.0);
+    let lower_left_corner = origin - horizontal/2.0 - vertical/2.0 - Vec3::new(0.0,0.0,focal_length);
+
+    //render
+
+    print!("P3\n{} {}\n255\n", image_width, image_height);
+    for j in (0..image_height).rev()
     {
-        for i in 0..nx
+        for i in 0..image_width
         {
-            let r = i as f32 / nx as f32;
-            let g = j as f32 / ny as f32;
-            let b :f32 = 0.2;
-            let ir = (255.00*r) as i32;
-            let ig = (255.00*g) as i32;
-            let ib = (255.00*b) as i32;
-            print!("{} {} {}\n", ir, ig, ib);
+            let u = (i as f32) / (image_width as f32) -1.0 as f32;
+            let v = (j as f32) / (image_height as f32) -1.0 as f32;
+            let r = Ray::new(origin, lower_left_corner + u* horizontal + v*vertical - origin);
+            let pixel_colour = ray_colour(r);
+            write_colour(pixel_colour);
         }
     }
 }
