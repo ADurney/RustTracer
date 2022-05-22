@@ -139,9 +139,9 @@ impl std::ops::Add<Vec3> for Vec3
     {
         Vec3
         {
-            x: self.x * other.x,
-            y: self.y * other.y,
-            z: self.z * other.z,
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
         }
     }
 }
