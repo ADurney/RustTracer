@@ -15,10 +15,12 @@ pub struct Sphere
 
 impl Sphere
 {
-    pub fn new (center : Vec3, radius : f32)
+    pub fn new (center : Vec3, radius : f32) ->Sphere
     {
-        center;
-        radius;
+        Sphere{
+            center,
+            radius,
+        }
     }
     pub fn hit(&self, ray : Ray) -> bool
     {
@@ -49,7 +51,7 @@ fn ray_colour(ray: Ray) -> Colour
     let sphr = Sphere::new(Point3::new(0.0,0.0,1.0),0.5);
     let collision = sphr.hit(ray);
 
-    let mut returnColour =
+    let return_colour =
         if collision {
             Colour::new(1.0,0.0,0.0)
         } else {
@@ -57,7 +59,7 @@ fn ray_colour(ray: Ray) -> Colour
             let t = 0.5 * (unit_direction.y + 1.0) as f32;
             ((1.0-t)*Colour::new(1.0,1.0,1.0) + t * Colour::new(0.0,1.0,1.0)) as Colour
         };
-        returnColour
+        return_colour
 
     
 
