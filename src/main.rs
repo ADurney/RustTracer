@@ -23,14 +23,21 @@ impl Sphere
             radius,
         }
     }
-    pub fn hit(&self, ray : Ray) -> bool
+    pub fn hit(&self, ray : Ray) -> f32
     {
         let oc = ray.origin() - self.center;
-        let a = Vec3::dot(&ray.direction(),&ray.direction());
-        let b = 2.0 * Vec3::dot(&oc,&ray.direction());
-        let c = Vec3::dot(&oc,&oc) - self.radius*self.radius;
-        let discriminant = (b*b) - (4.0*a*c);
-        let rvalue = (discriminant > 0.0) as bool;
+        let a = ray.direction().length() * ray.direction().length();
+        let b_half = Vec3::dot(&oc,&ray.direction());
+        let c = (oc.length() * oc.length()) - self.radius*self.radius;
+        let discriminant = (b_half*b_half) - (a*c);
+        
+        let rvalue = 
+        if discriminant < 0.0 {
+            -1.0
+        } else {
+            (-b_half - f32::sqrt(discriminant)) / a
+
+        };
         rvalue
 
     }
@@ -54,8 +61,9 @@ fn ray_colour(ray: Ray) -> Colour
     let collision = sphr.hit(ray);
 
     let return_colour =
-        if collision {
-            Colour::new(1.0,0.0,0.0)
+        if collision > 0.0 {
+            let normal = Vec3::make_unit_vector(ray.at(collision) - Vec3::new(0.0,0.0,-1.0));
+            Colour::new(normal.x+1.0,normal.y+1.0,normal.z+1.0)/2.0
         } else {
             let unit_direction = Vec3::make_unit_vector(ray.direction()) as Vec3;
             let t = 0.5 * (unit_direction.y + 1.0) as f32;
@@ -90,10 +98,10 @@ fn main()
     {
         for i in 0..image_width
         {
-            let image_width_f = (image_width as f32);
-            let image_height_f = (image_height as f32);
+            let image_width_f = image_width as f32;
+            let image_height_f = image_height as f32;
 
-            let u = ((i as f32) / (image_width_f-1.0));
+            let u = (i as f32) / (image_width_f-1.0);
             let v = (j as f32) / (image_height_f-1.0);
             let r = Ray::new(origin, lower_left_corner + u* horizontal + v*vertical - origin);
             let pixel_colour = ray_colour(r);
