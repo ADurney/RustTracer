@@ -1,3 +1,4 @@
+
 mod vec3;
 mod ray;
 
@@ -28,8 +29,9 @@ impl Sphere
         let a = Vec3::dot(&ray.direction(),&ray.direction());
         let b = 2.0 * Vec3::dot(&oc,&ray.direction());
         let c = Vec3::dot(&oc,&oc) - self.radius*self.radius;
-        let discriminant = b*b - 4.0*a*c;
-        (discriminant > 0.0) as bool
+        let discriminant = (b*b) - (4.0*a*c);
+        let rvalue = (discriminant > 0.0) as bool;
+        rvalue
 
     }
 }
@@ -48,7 +50,7 @@ fn write_colour(pixel_colour: Colour)
 
 fn ray_colour(ray: Ray) -> Colour
 {
-    let sphr = Sphere::new(Point3::new(0.0,0.0,1.0),0.5);
+    let sphr = Sphere::new(Point3::new(0.0,0.0,-1.0),0.5);
     let collision = sphr.hit(ray);
 
     let return_colour =
@@ -60,9 +62,6 @@ fn ray_colour(ray: Ray) -> Colour
             ((1.0-t)*Colour::new(1.0,1.0,1.0) + t * Colour::new(0.0,1.0,1.0)) as Colour
         };
         return_colour
-
-    
-
 }
 
 
@@ -91,8 +90,11 @@ fn main()
     {
         for i in 0..image_width
         {
-            let u = ((i as f32) / (image_width as f32) -1.0) as f32;
-            let v = ((j as f32) / (image_height as f32) -1.0) as f32;
+            let image_width_f = (image_width as f32);
+            let image_height_f = (image_height as f32);
+
+            let u = ((i as f32) / (image_width_f-1.0));
+            let v = (j as f32) / (image_height_f-1.0);
             let r = Ray::new(origin, lower_left_corner + u* horizontal + v*vertical - origin);
             let pixel_colour = ray_colour(r);
             write_colour(pixel_colour);
